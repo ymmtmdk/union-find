@@ -26,7 +26,6 @@ end
 def bench
   tiny = File.read('./tinyUF.txt')
   medium = File.read('./mediumUF.txt')
-  mlarge = File.read('./mlargeUF.txt')
   large = File.read('./largeUF.txt')
 
   Benchmark.bm do |x|
@@ -36,8 +35,8 @@ def bench
     x.report("BalancedQuickUnion, medium") { uf_run(BalancedQuickUnion, medium) }
     x.report("BalancedQuickUnionComp, medium") { uf_run(BalancedQuickUnionComp, medium) }
     # x.report("QuickUnion, large") { uf_run(QuickUnion, large) }
-    x.report("BalancedQuickUnion, mlarge") { uf_run(BalancedQuickUnion, mlarge) }
-    x.report("BalancedQuickUnionComp, mlarge") { uf_run(BalancedQuickUnionComp, mlarge) }
+    # x.report("BalancedQuickUnion, mlarge") { uf_run(BalancedQuickUnion, mlarge) }
+    x.report("BalancedQuickUnionComp, large") { uf_run(BalancedQuickUnionComp, large) }
   end
 end
 
@@ -46,3 +45,5 @@ medium = File.read('./mediumUF.txt')
 p uf_run(UnionFind, tiny)
 p uf_run(QuickUnion, tiny)
 p uf_run(BalancedQuickUnion, tiny)
+
+bench
