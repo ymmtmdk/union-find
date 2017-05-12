@@ -1,5 +1,3 @@
-import java.security.SecureRandom;
-import java.util.Random;
 import edu.princeton.cs.algs4.StdIn;
 import edu.princeton.cs.algs4.StdOut;
 
@@ -19,14 +17,10 @@ public class UnionFindMain{
     StdOut.println(uf.count() + " components");
 
     Percolation perc = new Percolation(3);
-    perc.open(0,0);
-    perc.open(0,1);
-    perc.open(0,2);
-    StdOut.println("is_percolates: " + perc.is_percolates());
+    perc.open(1,1);
+    perc.open(2,1);
+    perc.open(3,1);
+    StdOut.println("is_percolates: " + perc.percolates());
     perc = new Percolation(1000);
-    while (!perc.is_percolates()){
-      perc.random_open();
-    }
-    StdOut.println("count: " + perc.white_count());
    }
 }

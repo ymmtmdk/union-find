@@ -1,64 +1,157 @@
-import java.security.SecureRandom;
-import java.util.Random;
+import edu.princeton.cs.algs4.StdRandom;
+import edu.princeton.cs.algs4.StdStats;
+import edu.princeton.cs.algs4.WeightedQuickUnionUF;
+import edu.princeton.cs.algs4.StdIn;
+import edu.princeton.cs.algs4.StdOut;
 
-class Percolation{
+public class Percolation{
+  private class Sites{
+    private final boolean openSites[];
+    private int numberOfOpenSites;
+
+    Sites(int size, int[] initial){
+      this.openSites = new boolean[size];
+      for (int i = 0; i < initial.length; i++){
+        openSites[initial[i]] = true;
+      }
+      this.numberOfOpenSites = 0;
+    }
+
+    int numberOfOpenSites()       // number of open sites
+    {
+      return numberOfOpenSites;
+    }
+
+    void open(int row, int col){
+      if (!isOpen(row, col)){
+        numberOfOpenSites += 1;
+        openSites[indexOfP(row, col)] = true;
+      }
+    }
+
+    boolean isOpen(int row, int col){
+      return openSites[indexOfP(row, col)];
+    }
+  }
+
   private final int n;
-  private final boolean white_list[];
-  private final int v_top, v_bottom;
-  private final BalancedQuickUnionComp uf;
-  private final Random random;
+  private final Sites openSites;
+  private final int virtualTop, virtualBottom, virtualLeft, virtualRight;
+  private final WeightedQuickUnionUF unionFind;
 
-  Percolation(int n){
+  public Percolation(int n)
+  {
+    if (n <= 0){
+      throw new java.lang.IllegalArgumentException();
+    }
     this.n = n;
-    this.white_list = new boolean[n*n];
-    this.v_top = n*n;
-    this.v_bottom = n*n+1;
-    this.random = new SecureRandom();
-    this.uf = new BalancedQuickUnionComp(n*n+2);
-    for (int i = 0; i < n; i++){
-      uf.union(v_top, i);
-      uf.union(v_bottom, n*(n-1)+i);
-    }
+    this.virtualTop = n*n;
+    this.virtualBottom = virtualTop+1;
+    this.virtualLeft = virtualTop+2;
+    this.virtualRight = virtualTop+3;
+    this.openSites = new Sites(n*n+4, new int[]{virtualTop, virtualBottom});
+    this.unionFind = new WeightedQuickUnionUF(n*n+4);
   }
 
-  void union_side(int p, int q){
-    if (white_list[q]){
-      uf.union(p, q);
-    }
-  }
-
-  void open(int x, int y){
-    int p = p_index(x, y);
-    if (white_list[p]){
+  public void open(int row, int col)    // open site (row, col) if it is not open already
+  {
+    if (isOpen(row, col)){
       return;
     }
 
-    white_list[p] = true;
+    openSites.open(row, col);
 
-    if (x > 0) union_side(p, p_index(x-1, y));
-    if (x < n-1) union_side(p, p_index(x+1, y));
-    if (y > 0) union_side(p, p_index(x, y-1));
-    if (y < n-1) union_side(p, p_index(x, y+1));
+    unionNeighbor(row, col, row, col-1);
+    unionNeighbor(row, col, row, col+1);
+    unionNeighbor(row, col, row-1, col);
+    unionNeighbor(row, col, row+1, col);
   }
 
-  private int p_index(int x, int y){
-    return y*n+x;
+  public boolean isOpen(int row, int col)  // is site (row, col) open?
+  {
+    boundCheck(row, col);
+    return openSites.isOpen(row, col);
   }
 
-  void random_open(){
-    open(random.nextInt(n), random.nextInt(n));
+  public boolean isFull(int row, int col)  // is site (row, col) full?
+  {
+    boundCheck(row, col);
+    return unionFind.connected(virtualTop, indexOfP(row, col));
   }
 
-  boolean is_percolates(){
-    return uf.connected(v_top, v_bottom);
+  public int numberOfOpenSites()       // number of open sites
+  {
+    return openSites.numberOfOpenSites();
   }
 
-  int white_count(){
-    int c = 0;
-    for (int i = 0; i < n*n; i++){
-      if (white_list[i]) c+= 1;
+  public boolean percolates()              // does the system percolate?
+  {
+    return unionFind.connected(virtualTop, virtualBottom);
+  }
+
+  private void boundCheck(int row, int col){
+    if (row > n || col > n || row < 1 || col < 1){
+      throw new java.lang.IndexOutOfBoundsException();
     }
-    return c;
+  }
 
+  private void unionNeighbor(int row1, int col1, int row2, int col2){
+    if (openSites.isOpen(row2, col2)){
+      int p = indexOfP(row1, col1);
+      int q = indexOfP(row2, col2);
+      unionFind.union(p, q);
+    }
+  }
+
+  private int indexOfP(int row, int col){
+    if (row < 1) return virtualTop;
+    if (row > n) return virtualBottom;
+    if (col < 1) return virtualLeft;
+    if (col > n) return virtualRight;
+
+    return (row-1)*n+col-1;
+  }
+
+  private static void show(Percolation perc, int n){
+    StdOut.println("------------");
+    for (int row = 1; row <= n; row++){
+      for (int col = 1; col <= n; col++){
+        if (perc.isOpen(row, col)){
+          StdOut.print(perc.isFull(row, col) ? "[31m￭" : "[37m￭");
+        } else{
+          StdOut.print(" ");
+        }
+      }
+      StdOut.println(" ");
+    }
+    StdOut.print("[37m");
+  }
+
+  public static void main(String[] args) {
+    Percolation perc = new Percolation(2);
+    show(perc, 2);
+    StdOut.println("p: " +perc.percolates());
+    perc.open(2,2);
+    show(perc, 2);
+    StdOut.println("p: " +perc.percolates());
+    perc.open(2,1);
+    show(perc, 2);
+    StdOut.println("p: " +perc.percolates());
+    perc.open(1,2);
+    show(perc, 2);
+    StdOut.println("p: " +perc.percolates());
+    perc.open(1,1);
+    show(perc, 2);
+    StdOut.println("p: " +perc.percolates());
+
+    int n = StdIn.readInt();
+    perc = new Percolation(n);
+    while (!StdIn.isEmpty()) {
+      show(perc, n);
+      int row = StdIn.readInt();
+      int col = StdIn.readInt();
+      perc.open(row, col);
+    }
+    show(perc, n);
   }
 }
