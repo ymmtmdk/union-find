@@ -1,5 +1,7 @@
 import java.security.SecureRandom;
 import java.util.Random;
+import edu.princeton.cs.algs4.StdIn;
+import edu.princeton.cs.algs4.StdOut;
 
 public class UnionFindMain{
   public static void main(String[] args) {
